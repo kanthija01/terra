@@ -31,10 +31,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/ecoscan/page.js"
     ],
-    "/village/page": [
+    "/footprint/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/village/page.js"
+      "static/chunks/app/footprint/page.js"
     ]
   }
 }

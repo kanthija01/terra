@@ -9,6 +9,7 @@ const navItems = [
   { href: '/future-memories', icon: '⏳', label: 'Future' },
   { href: '/ecoscan', icon: '📸', label: 'Scan' },
   { href: '/village', icon: '🏘️', label: 'Village' },
+  { href: '/footprint', icon: '🧮', label: 'Footprint' },
 ];
 
 export function FloatingNav() {
