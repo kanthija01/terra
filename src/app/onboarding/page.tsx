@@ -51,50 +51,56 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <main className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-terra-space-950 via-terra-space-900 to-terra-green-900/20" />
 
       {/* Progress */}
-      <div className="relative z-10 w-full max-w-md mb-12">
-        <div className="flex gap-2">
+      <section className="relative z-10 w-full max-w-md mb-12" aria-label="Onboarding progress" role="region">
+        <div className="flex gap-2" role="progressbar" aria-valuenow={step + 1} aria-valuemin={1} aria-valuemax={steps.length}>
           {steps.map((_, i) => (
-            <div key={i} className="flex-1 h-1 rounded-full bg-terra-space-800 overflow-hidden">
+            <div key={i} className="flex-1 h-1 rounded-full bg-terra-space-800 overflow-hidden" aria-hidden="true">
               <motion.div animate={{ width: i <= step ? '100%' : '0%' }} className="h-full bg-terra-green-400 rounded-full" />
             </div>
           ))}
         </div>
-      </div>
+      </section>
 
       <AnimatePresence mode="wait">
-        <motion.div
+        <motion.section
           key={step}
           initial={{ opacity: 0, x: 50 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -50 }}
           className="relative z-10 w-full max-w-md text-center"
+          role="region"
+          aria-label={`Question ${step + 1} of ${steps.length}`}
+          aria-live="polite"
         >
-          <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-6xl mb-6">🌍</motion.div>
+          <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-6xl mb-6" aria-hidden="true">🌍</motion.div>
           <h1 className="text-3xl font-display font-bold mb-8">{steps[step].question}</h1>
-          <div className="space-y-3">
+          <div className="space-y-3" role="radiogroup" aria-label="Answer options">
             {steps[step].options.map((option) => (
               <motion.button
                 key={option.value}
+                type="button"
+                role="radio"
+                aria-label={option.label}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelect(option.impact)}
-                className="w-full glass glass-hover p-4 text-left text-lg font-medium"
+                className="w-full glass glass-hover p-4 text-left text-lg font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-terra-green-400"
               >
                 {option.label}
               </motion.button>
             ))}
           </div>
-        </motion.div>
+        </motion.section>
       </AnimatePresence>
 
-      <motion.div className="relative z-10 mt-8 text-center" animate={{ opacity: step > 0 ? 1 : 0 }}>
+      <motion.section className="relative z-10 mt-8 text-center" animate={{ opacity: step > 0 ? 1 : 0 }} aria-live="polite" aria-label="Earth health score">
         <div className="text-sm text-terra-space-400">Earth forming...</div>
-        <div className="text-2xl font-mono font-bold text-terra-green-400">{score}%</div>
-      </motion.div>
-    </div>
+        <div className="text-2xl font-mono font-bold text-terra-green-400" aria-label={`Current score: ${score} percent`}>{score}%</div>
+      </motion.section>
+    </main>
   );
 }

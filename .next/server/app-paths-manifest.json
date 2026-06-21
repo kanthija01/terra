@@ -1,5 +1,9 @@
 {
   "/page": "app/page.js",
+  "/simulator/page": "app/simulator/page.js",
+  "/future-memories/page": "app/future-memories/page.js",
+  "/earth/page": "app/earth/page.js",
   "/footprint/page": "app/footprint/page.js",
-  "/earth/page": "app/earth/page.js"
+  "/village/page": "app/village/page.js",
+  "/_not-found/page": "app/_not-found/page.js"
 }

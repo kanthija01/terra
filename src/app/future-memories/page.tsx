@@ -29,7 +29,7 @@ export default function FutureMemoriesPage() {
   };
 
   return (
-   <div className="relative min-h-screen bg-terra-space-950 overflow-hidden">
+   <main className="relative min-h-screen bg-terra-space-950 overflow-hidden">
       <motion.div
         animate={{
           background: activeYear === 0
@@ -55,53 +55,59 @@ export default function FutureMemoriesPage() {
         </motion.div>
 
         {/* Timeline */}
-        <div className="max-w-md mx-auto mb-8">
-          <div className="flex items-center justify-between relative">
-            <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-terra-space-800" />
-            <motion.div animate={{ width: `${(activeYear / 3) * 100}%` }} className="absolute top-1/2 left-0 h-0.5 bg-terra-green-500" />
+        <nav className="max-w-md mx-auto mb-8" aria-label="Time travel navigation">
+          <div className="flex items-center justify-between relative" role="tablist">
+            <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-terra-space-800" aria-hidden="true" />
+            <motion.div animate={{ width: `${(activeYear / 3) * 100}%` }} className="absolute top-1/2 left-0 h-0.5 bg-terra-green-500" aria-hidden="true" />
             {timePoints.map((point, i) => (
               <motion.button
                 key={point.year}
+                type="button"
+                role="tab"
+                aria-selected={i === activeYear}
+                aria-label={`${point.label} from now`}
                 whileHover={{ scale: 1.2 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setActiveYear(i)}
-                className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all ${i <= activeYear ? 'bg-terra-green-500 text-white shadow-glow-green' : 'bg-terra-space-800 text-terra-space-400'}`}
+                className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-terra-green-400 ${i <= activeYear ? 'bg-terra-green-500 text-white shadow-glow-green' : 'bg-terra-space-800 text-terra-space-400'}`}
               >
                 {point.label.split(' ')[0]}
               </motion.button>
             ))}
           </div>
-        </div>
+        </nav>
 
         <AnimatePresence mode="wait">
-          <motion.div key={activeYear} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6 }} className="max-w-md mx-auto">
+          <motion.section key={activeYear} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6 }} className="max-w-md mx-auto" role="region" aria-live="polite" aria-label="Future vision">
             <GlassCard glow={activeYear > 2 ? 'aurora' : 'none'}>
-              <div className="text-center">
-                <div className="text-xs text-terra-aurora-purple font-semibold uppercase tracking-widest mb-3">{timePoints[activeYear].label} from now</div>
+              <article className="text-center">
+                <h2 className="text-xs text-terra-aurora-purple font-semibold uppercase tracking-widest mb-3">{timePoints[activeYear].label} from now</h2>
                 <p className="text-terra-space-200 italic leading-relaxed">&quot;{narratives[timePoints[activeYear].year]}&quot;</p>
                 <div className="mt-4 flex justify-center gap-4 text-xs text-terra-space-400">
-                  <span>🌳 {Math.round(getHealthForYear(timePoints[activeYear].year) * 0.8)} forests</span>
-                  <span>🐦 {Math.round(getHealthForYear(timePoints[activeYear].year) * 0.5)} species</span>
-                  <span>💨 {getHealthForYear(timePoints[activeYear].year)}% clean</span>
+                  <span aria-label={`${Math.round(getHealthForYear(timePoints[activeYear].year) * 0.8)} forests`}><span aria-hidden="true">🌳</span> {Math.round(getHealthForYear(timePoints[activeYear].year) * 0.8)} forests</span>
+                  <span aria-label={`${Math.round(getHealthForYear(timePoints[activeYear].year) * 0.5)} species`}><span aria-hidden="true">🐦</span> {Math.round(getHealthForYear(timePoints[activeYear].year) * 0.5)} species</span>
+                  <span aria-label={`${getHealthForYear(timePoints[activeYear].year)} percent clean`}><span aria-hidden="true">💨</span> {getHealthForYear(timePoints[activeYear].year)}% clean</span>
                 </div>
-              </div>
+              </article>
             </GlassCard>
-          </motion.div>
+          </motion.section>
         </AnimatePresence>
 
         {activeYear === 3 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="max-w-md mx-auto mt-6 text-center">
-            <GlassCard className="cursor-pointer" glow="aurora">
-              <div className="text-2xl mb-2">✉️</div>
-              <div className="text-sm font-semibold">A letter from your future Earth</div>
-              <div className="text-xs text-terra-space-400 mt-1 italic">&quot;Thank you for choosing me...&quot;</div>
-            </GlassCard>
+            <button type="button" aria-label="Read a letter from your future Earth" className="w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-terra-green-400 rounded-2xl">
+              <GlassCard glow="aurora" className="text-left">
+                <div className="text-2xl mb-2" aria-hidden="true">✉️</div>
+                <div className="text-sm font-semibold">A letter from your future Earth</div>
+                <div className="text-xs text-terra-space-400 mt-1 italic">&quot;Thank you for choosing me...&quot;</div>
+              </GlassCard>
+            </button>
           </motion.div>
         )}
       </div>
 <div className="fixed bottom-6 right-8 z-50">
         <FloatingNav />
       </div>
-    </div>
+    </main>
   );
 }
