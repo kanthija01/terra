@@ -50,6 +50,41 @@ export default function OnboardingPage() {
     }
   };
 
+  const handleOptionKeyDown = (
+    event: React.KeyboardEvent<HTMLButtonElement>,
+    optionIndex: number,
+    optionImpact: number
+  ) => {
+    const options = steps[step].options;
+    const move = (offset: number) => {
+      const nextIndex = (optionIndex + offset + options.length) % options.length;
+      const nextOption = options[nextIndex];
+      if (nextOption) {
+        const nextButton = document.querySelector(
+          `[data-option-value="${nextOption.value}"]`
+        ) as HTMLButtonElement | null;
+        nextButton?.focus();
+      }
+    };
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      move(1);
+      return;
+    }
+
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      move(-1);
+      return;
+    }
+
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleSelect(optionImpact);
+    }
+  };
+
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-terra-space-950 via-terra-space-900 to-terra-green-900/20" />
@@ -79,15 +114,18 @@ export default function OnboardingPage() {
           <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="text-6xl mb-6" aria-hidden="true">🌍</motion.div>
           <h1 className="text-3xl font-display font-bold mb-8">{steps[step].question}</h1>
           <div className="space-y-3" role="radiogroup" aria-label="Answer options">
-            {steps[step].options.map((option) => (
+            {steps[step].options.map((option, optionIndex) => (
               <motion.button
                 key={option.value}
                 type="button"
                 role="radio"
                 aria-label={option.label}
+                aria-checked={false}
+                data-option-value={option.value}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => handleSelect(option.impact)}
+                onKeyDown={(event) => handleOptionKeyDown(event, optionIndex, option.impact)}
                 className="w-full glass glass-hover p-4 text-left text-lg font-medium focus-visible:outline focus-visible:outline-2 focus-visible:outline-terra-green-400"
               >
                 {option.label}

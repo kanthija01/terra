@@ -1,9 +1,11 @@
 'use client';
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from '@/components/ui/glass-card';
 import { FloatingNav } from '@/components/ui/floating-nav';
 import { useTerraStore } from '@/stores/terra-store';
+import { useFootprintStore } from '@/stores/carbon-store';
+import { generateFutureNarrative } from '@/lib/gemini';
 
 const timePoints = [
   { year: 0, label: 'Now', emoji: '📍' },
@@ -21,11 +23,58 @@ const narratives: Record<number, string> = {
 
 export default function FutureMemoriesPage() {
   const [activeYear, setActiveYear] = useState(0);
+  const [generatedNarrative, setGeneratedNarrative] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [narrativeError, setNarrativeError] = useState<string | null>(null);
   const { score } = useTerraStore();
+  const { inputs, result } = useFootprintStore();
+
+  const handleTimelineKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft' && event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
+      return;
+    }
+
+    event.preventDefault();
+    const direction = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1;
+    const nextIndex = (index + direction + timePoints.length) % timePoints.length;
+    setActiveYear(nextIndex);
+  };
 
   const getHealthForYear = (year: number) => {
     const growth = score > 50 ? year * 3 : -year * 2;
     return Math.min(100, Math.max(0, score + growth));
+  };
+
+  const selectedPoint = timePoints[activeYear];
+  const displayNarrative = generatedNarrative || narratives[selectedPoint.year];
+
+  const handleGenerateNarrative = async () => {
+    setNarrativeError(null);
+    setIsGenerating(true);
+    try {
+      const activities = result
+        ? [
+            `${inputs.transport} transport`,
+            `${inputs.electricity} electricity use`,
+            `${inputs.food} diet`,
+          ]
+        : ['daily care'];
+
+      const narrative = await generateFutureNarrative(
+        score,
+        selectedPoint.year,
+        activities
+      );
+      setGeneratedNarrative(narrative);
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message.includes('timed out')
+          ? 'The memory generator took too long. Please try again.'
+          : 'Could not generate a fresh future memory right now.';
+      setNarrativeError(message);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -65,10 +114,13 @@ export default function FutureMemoriesPage() {
                 type="button"
                 role="tab"
                 aria-selected={i === activeYear}
-                aria-label={`${point.label} from now`}
+                aria-controls={`future-panel-${point.year}`}
+                aria-label={`${point.label} from now${i === activeYear ? ', selected' : ''}`}
+                tabIndex={i === activeYear ? 0 : -1}
                 whileHover={{ scale: 1.2 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => setActiveYear(i)}
+                onKeyDown={(event) => handleTimelineKeyDown(event, i)}
                 className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center text-xs font-bold transition-all focus-visible:outline focus-visible:outline-2 focus-visible:outline-terra-green-400 ${i <= activeYear ? 'bg-terra-green-500 text-white shadow-glow-green' : 'bg-terra-space-800 text-terra-space-400'}`}
               >
                 {point.label.split(' ')[0]}
@@ -78,11 +130,11 @@ export default function FutureMemoriesPage() {
         </nav>
 
         <AnimatePresence mode="wait">
-          <motion.section key={activeYear} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6 }} className="max-w-md mx-auto" role="region" aria-live="polite" aria-label="Future vision">
+          <motion.section id={`future-panel-${selectedPoint.year}`} key={activeYear} initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.6 }} className="max-w-md mx-auto" role="region" aria-live="polite" aria-label="Future vision">
             <GlassCard glow={activeYear > 2 ? 'aurora' : 'none'}>
               <article className="text-center">
                 <h2 className="text-xs text-terra-aurora-purple font-semibold uppercase tracking-widest mb-3">{timePoints[activeYear].label} from now</h2>
-                <p className="text-terra-space-200 italic leading-relaxed">&quot;{narratives[timePoints[activeYear].year]}&quot;</p>
+                <p className="text-terra-space-200 italic leading-relaxed" aria-live="polite">&quot;{displayNarrative}&quot;</p>
                 <div className="mt-4 flex justify-center gap-4 text-xs text-terra-space-400">
                   <span aria-label={`${Math.round(getHealthForYear(timePoints[activeYear].year) * 0.8)} forests`}><span aria-hidden="true">🌳</span> {Math.round(getHealthForYear(timePoints[activeYear].year) * 0.8)} forests</span>
                   <span aria-label={`${Math.round(getHealthForYear(timePoints[activeYear].year) * 0.5)} species`}><span aria-hidden="true">🐦</span> {Math.round(getHealthForYear(timePoints[activeYear].year) * 0.5)} species</span>
@@ -95,11 +147,28 @@ export default function FutureMemoriesPage() {
 
         {activeYear === 3 && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="max-w-md mx-auto mt-6 text-center">
-            <button type="button" aria-label="Read a letter from your future Earth" className="w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-terra-green-400 rounded-2xl">
+            <button
+              type="button"
+              aria-label="Read a letter from your future Earth"
+              onClick={handleGenerateNarrative}
+              disabled={isGenerating}
+              className="w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-terra-green-400 rounded-2xl disabled:opacity-70"
+            >
               <GlassCard glow="aurora" className="text-left">
                 <div className="text-2xl mb-2" aria-hidden="true">✉️</div>
-                <div className="text-sm font-semibold">A letter from your future Earth</div>
-                <div className="text-xs text-terra-space-400 mt-1 italic">&quot;Thank you for choosing me...&quot;</div>
+                <div className="text-sm font-semibold">{isGenerating ? 'Generating your letter…' : 'A letter from your future Earth'}</div>
+                <div className="text-xs text-terra-space-400 mt-1 italic" role="status" aria-live="polite">
+                  {narrativeError || (generatedNarrative ? 'A fresh message from your future Earth.' : '“Thank you for choosing me...”')}
+                </div>
+                {narrativeError && (
+                  <button
+                    type="button"
+                    onClick={handleGenerateNarrative}
+                    className="mt-3 w-full rounded-xl border border-terra-green-400/40 px-3 py-2 text-sm font-medium text-terra-green-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-terra-green-400"
+                  >
+                    Try again
+                  </button>
+                )}
               </GlassCard>
             </button>
           </motion.div>

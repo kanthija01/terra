@@ -16,20 +16,36 @@
 
 import type { EcoScanResult } from './gemini-server';
 
+const DEFAULT_TIMEOUT_MS = 15_000;
+
 async function postJson<TResponse>(url: string, body: unknown): Promise<TResponse> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS);
+
   let response: Response;
   try {
     response = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
       body: JSON.stringify(body),
+      cache: 'no-store',
+      signal: controller.signal,
     });
   } catch (networkError) {
+    if (networkError instanceof Error && networkError.name === 'AbortError') {
+      throw new Error(`Request to ${url} timed out after ${DEFAULT_TIMEOUT_MS / 1000} seconds.`);
+    }
+
     throw new Error(
-      `Could not reach ${url}. Check your network connection. (${
+      `Could not reach ${url}. Check your network connection. (${ 
         networkError instanceof Error ? networkError.message : 'unknown error'
       })`
     );
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   let payload: unknown;

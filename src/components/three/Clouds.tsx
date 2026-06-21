@@ -12,7 +12,7 @@ export function Clouds() {
 
   return (
     <mesh ref={ref} scale={[1.02, 1.02, 1.02]}>
-      <sphereGeometry args={[2, 32, 32]} />
+      <sphereGeometry args={[2, 24, 24]} />
       <meshStandardMaterial transparent opacity={0.3} color="#ffffff" depthWrite={false} />
     </mesh>
   );

@@ -108,7 +108,7 @@ export function Earth() {
 
   return (
     <mesh ref={meshRef}>
-      <sphereGeometry args={[2, 64, 64]} />
+      <sphereGeometry args={[2, 48, 48]} />
       <shaderMaterial vertexShader={vertexShader} fragmentShader={fragmentShader} uniforms={uniforms} />
     </mesh>
   );

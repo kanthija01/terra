@@ -1,4 +1,5 @@
 'use client';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
@@ -7,10 +8,18 @@ import { FloatingNav } from '@/components/ui/floating-nav';
 import { useTerraStore } from '@/stores/terra-store';
 import { useFootprintStore } from '@/stores/carbon-store';
 import { getRecommendation } from '@/lib/gaia-recommendations';
+import { askGaia } from '@/lib/gemini';
 
 const EarthScene = dynamic(
   () => import('@/components/three/EarthScene').then(m => ({ default: m.EarthScene })),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="absolute inset-0 flex items-center justify-center bg-terra-space-950/60">
+        <div className="text-sm text-terra-space-300">Loading Earth view…</div>
+      </div>
+    ),
+  }
 );
 
 const WEATHER_LABELS: Record<string, string> = {
@@ -23,14 +32,52 @@ const DEFAULT_GAIA_MESSAGE = 'Your Earth is breathing easier today! That bike ri
 
 export default function EarthPage() {
   const router = useRouter();
-  const { score, missions, earthState } = useTerraStore();
+  const { score, missions, earthState, gaiaMessage, setGaiaMessage } = useTerraStore();
   const { inputs, result } = useFootprintStore();
+  const [isLoadingGaia, setIsLoadingGaia] = useState(false);
 
   // Gaia becomes context-aware once the user has run the footprint calculator;
   // until then she shows her original welcome message.
-  const recommendation = result ? getRecommendation(inputs, result) : null;
-  const gaiaMessage = recommendation ? recommendation.message : DEFAULT_GAIA_MESSAGE;
+  const recommendation = useMemo(
+    () => (result ? getRecommendation(inputs, result) : null),
+    [inputs, result]
+  );
+  const activeGaiaMessage = useMemo(
+    () => gaiaMessage ?? (recommendation ? recommendation.message : DEFAULT_GAIA_MESSAGE),
+    [gaiaMessage, recommendation]
+  );
   const gaiaIcon = recommendation && recommendation.category !== 'maintain' ? recommendation.icon : '🌱';
+
+  useEffect(() => {
+    if (!result || !recommendation) {
+      return;
+    }
+
+    let cancelled = false;
+    const context = `The user reports transport=${inputs.transport}, electricity=${inputs.electricity}, and food=${inputs.food}. Current footprint is ${result.total} kg CO₂e/year, rating=${result.rating}, and the best next action is ${recommendation.actionLabel}.`;
+
+    setIsLoadingGaia(true);
+    askGaia(context)
+      .then((message) => {
+        if (!cancelled) {
+          setGaiaMessage(message);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setGaiaMessage(recommendation.message);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingGaia(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [inputs, recommendation, result, setGaiaMessage]);
 
   return (
     <div className="relative h-screen w-full overflow-hidden">
@@ -95,7 +142,7 @@ export default function EarthPage() {
             <div className="flex-1">
               <h2 className="text-[10px] font-semibold tracking-widest uppercase text-terra-aurora-purple mb-1.5">Gaia</h2>
               <p className="text-sm text-terra-space-200 italic leading-relaxed">
-                &quot;{gaiaMessage}&quot;
+                &quot;{isLoadingGaia ? 'Thinking about your Earth…' : activeGaiaMessage}&quot;
               </p>
               {recommendation && recommendation.category !== 'maintain' && (
                 <motion.button

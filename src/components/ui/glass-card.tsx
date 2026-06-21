@@ -1,7 +1,7 @@
 'use client';
+import React, { KeyboardEvent } from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { KeyboardEvent } from 'react';
 
 interface GlassCardProps extends HTMLMotionProps<'div'> {
   glow?: 'green' | 'aurora' | 'none';

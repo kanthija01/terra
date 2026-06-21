@@ -1,4 +1,5 @@
 'use client';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GlassCard } from '@/components/ui/glass-card';
 import { FloatingNav } from '@/components/ui/floating-nav';
@@ -35,8 +36,29 @@ function OptionGrid<T extends string>({
   selected: T;
   onSelect: (value: T) => void;
 }) {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, option: T) => {
+    const currentIndex = options.indexOf(option);
+    if (currentIndex === -1) return;
+
+    const move = (offset: number) => {
+      const nextIndex = (currentIndex + offset + options.length) % options.length;
+      onSelect(options[nextIndex]);
+    };
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      move(1);
+      return;
+    }
+
+    if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      move(-1);
+    }
+  };
+
   return (
-    <div className="grid grid-cols-2 gap-2" role="radiogroup">
+    <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Carbon footprint options">
       {options.map((opt) => {
         const active = opt === selected;
         return (
@@ -46,9 +68,12 @@ function OptionGrid<T extends string>({
             role="radio"
             aria-checked={active}
             aria-label={labels[opt].label}
+            aria-pressed={active}
+            tabIndex={active ? 0 : -1}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => onSelect(opt)}
+            onKeyDown={(event) => handleKeyDown(event, opt)}
             className={`glass glass-hover flex flex-col items-center gap-1 py-3 rounded-xl border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-terra-green-400 ${
               active ? 'border-terra-green-500/60 bg-terra-green-500/10' : 'border-white/10'
             }`}
