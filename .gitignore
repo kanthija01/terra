@@ -1,2 +1,10 @@
 node_modules
 .next
+
+# environment variables — never commit real secrets
+.env
+.env.local
+.env*.local
+.env.development
+.env.production
+.env.test
