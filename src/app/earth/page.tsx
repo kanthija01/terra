@@ -1,9 +1,12 @@
 'use client';
 import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
 import { GlassCard } from '@/components/ui/glass-card';
 import { FloatingNav } from '@/components/ui/floating-nav';
 import { useTerraStore } from '@/stores/terra-store';
+import { useFootprintStore } from '@/stores/carbon-store';
+import { getRecommendation } from '@/lib/gaia-recommendations';
 
 const EarthScene = dynamic(
   () => import('@/components/three/EarthScene').then(m => ({ default: m.EarthScene })),
@@ -16,8 +19,18 @@ const WEATHER_LABELS: Record<string, string> = {
   rain:   '🌧️ Healing rain',
 };
 
+const DEFAULT_GAIA_MESSAGE = 'Your Earth is breathing easier today! That bike ride cleared the skies for hundreds.';
+
 export default function EarthPage() {
+  const router = useRouter();
   const { score, missions, earthState } = useTerraStore();
+  const { inputs, result } = useFootprintStore();
+
+  // Gaia becomes context-aware once the user has run the footprint calculator;
+  // until then she shows her original welcome message.
+  const recommendation = result ? getRecommendation(inputs, result) : null;
+  const gaiaMessage = recommendation ? recommendation.message : DEFAULT_GAIA_MESSAGE;
+  const gaiaIcon = recommendation && recommendation.category !== 'maintain' ? recommendation.icon : '🌱';
 
   return (
     <div className="relative h-screen w-full overflow-hidden">
@@ -61,12 +74,35 @@ export default function EarthPage() {
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8, duration: 0.4 }} className="w-72">
           <GlassCard glow="aurora" className="flex items-start gap-3 p-5">
-            <span className="text-xl mt-0.5 shrink-0">🌱</span>
-            <div>
+            <span className="text-xl mt-0.5 shrink-0">{gaiaIcon}</span>
+            <div className="flex-1">
               <div className="text-[10px] font-semibold tracking-widest uppercase text-terra-aurora-purple mb-1.5">Gaia</div>
               <p className="text-sm text-terra-space-200 italic leading-relaxed">
-                &quot;Your Earth is breathing easier today! That bike ride cleared the skies for hundreds.&quot;
+                &quot;{gaiaMessage}&quot;
               </p>
+              {recommendation && recommendation.category !== 'maintain' && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => router.push('/footprint')}
+                  className="mt-3 w-full glass glass-hover px-3 py-2 rounded-xl flex items-center justify-between text-left"
+                >
+                  <span className="text-xs font-medium text-terra-space-200">{recommendation.actionLabel}</span>
+                  <span className="text-[11px] font-mono font-bold text-terra-green-400 shrink-0 ml-2">
+                    −{recommendation.estimatedSavingsKg.toLocaleString()} kg/yr
+                  </span>
+                </motion.button>
+              )}
+              {!result && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => router.push('/footprint')}
+                  className="mt-3 w-full glass glass-hover px-3 py-2 rounded-xl text-left"
+                >
+                  <span className="text-xs font-medium text-terra-space-200">🧮 Calculate your footprint</span>
+                </motion.button>
+              )}
             </div>
           </GlassCard>
         </motion.div>

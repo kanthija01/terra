@@ -620,6 +620,12 @@ body{
 .mt-8{
   margin-top: 2rem;
 }
+.ml-3{
+  margin-left: 0.75rem;
+}
+.ml-2{
+  margin-left: 0.5rem;
+}
 .flex{
   display: flex;
 }
@@ -951,6 +957,10 @@ body{
   padding-top: 2rem;
   padding-bottom: 2rem;
 }
+.py-2\.5{
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
 .pb-24{
   padding-bottom: 6rem;
 }
@@ -1114,6 +1124,9 @@ body{
     opacity: var(--tw-exit-opacity, 1);
     transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));
   }
+}
+.running{
+  animation-play-state: running;
 }
 
 ::-webkit-scrollbar { width: 4px; }

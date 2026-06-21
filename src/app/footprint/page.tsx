@@ -4,6 +4,7 @@ import { GlassCard } from '@/components/ui/glass-card';
 import { FloatingNav } from '@/components/ui/floating-nav';
 import { AnimatedCounter } from '@/components/ui/animated-counter';
 import { useFootprintStore } from '@/stores/carbon-store';
+import { getRecommendation } from '@/lib/gaia-recommendations';
 import {
   TRANSPORT_LABELS,
   ELECTRICITY_LABELS,
@@ -62,6 +63,7 @@ export default function FootprintPage() {
   const { inputs, result, setTransport, setElectricity, setFood, calculate, reset } = useFootprintStore();
 
   const ratingCopy = result ? RATING_COPY[result.rating] : null;
+  const recommendation = result ? getRecommendation(inputs, result) : null;
 
   return (
     <div className="relative min-h-screen p-6 pb-24 bg-terra-space-950">
@@ -182,6 +184,28 @@ export default function FootprintPage() {
                 ))}
               </div>
             </GlassCard>
+
+            {recommendation && (
+              <GlassCard glow="aurora" className="flex items-start gap-3 p-5">
+                <span className="text-xl mt-0.5 shrink-0">{recommendation.category === 'maintain' ? '🌟' : recommendation.icon}</span>
+                <div className="flex-1">
+                  <div className="text-[10px] font-semibold tracking-widest uppercase text-terra-aurora-purple mb-1.5">
+                    Gaia&apos;s recommendation
+                  </div>
+                  <p className="text-sm text-terra-space-200 italic leading-relaxed">
+                    &quot;{recommendation.message}&quot;
+                  </p>
+                  {recommendation.category !== 'maintain' && (
+                    <div className="mt-3 w-full glass px-3 py-2 rounded-xl flex items-center justify-between">
+                      <span className="text-xs font-medium text-terra-space-200">{recommendation.actionLabel}</span>
+                      <span className="text-[11px] font-mono font-bold text-terra-green-400 shrink-0 ml-2">
+                        −{recommendation.estimatedSavingsKg.toLocaleString()} kg/yr
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </GlassCard>
+            )}
 
             <GlassCard glow="green" className="flex items-center justify-between">
               <div>

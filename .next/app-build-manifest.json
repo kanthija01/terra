@@ -16,21 +16,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/earth/page.js"
     ],
-    "/simulator/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/simulator/page.js"
-    ],
-    "/future-memories/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/future-memories/page.js"
-    ],
-    "/ecoscan/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/ecoscan/page.js"
-    ],
     "/footprint/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
